@@ -219,6 +219,25 @@ export default function AdminDashboard() {
 
                   <FormField
                     control={form.control}
+                    name="imageUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>URL de Imagen</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="url"
+                            placeholder="https://ejemplo.com/imagen.jpg"
+                            data-testid="input-product-imageUrl"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name="stock"
                     render={({ field }) => (
                       <FormItem>
