@@ -35,6 +35,7 @@ export class SupabaseStorage implements IStorage {
       price: row.price,
       category: row.category,
       imageUrl: row.image_url,
+      imageUrls: row.image_urls || [],
       requiresPrescription: row.requires_prescription,
       stock: row.stock,
     };
@@ -76,6 +77,7 @@ export class SupabaseStorage implements IStorage {
         price: product.price,
         category: product.category,
         image_url: product.imageUrl,
+        image_urls: product.imageUrls || [],
         requires_prescription: product.requiresPrescription,
         stock: product.stock,
       }])
@@ -97,6 +99,7 @@ export class SupabaseStorage implements IStorage {
     if (updates.price) mappedUpdates.price = updates.price;
     if (updates.category) mappedUpdates.category = updates.category;
     if (updates.imageUrl) mappedUpdates.image_url = updates.imageUrl;
+    if (updates.imageUrls !== undefined) mappedUpdates.image_urls = updates.imageUrls || [];
     if (updates.requiresPrescription !== undefined) mappedUpdates.requires_prescription = updates.requiresPrescription;
     if (updates.stock !== undefined) mappedUpdates.stock = updates.stock;
 
