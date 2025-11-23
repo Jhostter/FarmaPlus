@@ -25,6 +25,24 @@ export interface IStorage {
 }
 
 export class SupabaseStorage implements IStorage {
+  // Helper method to map Supabase data to Product type
+  private mapProduct(row: any): Product {
+    return {
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      price: row.price,
+      category: row.category,
+      imageUrl: row.image_url,
+      requiresPrescription: row.requires_prescription,
+      stock: row.stock,
+    };
+  }
+
+  private mapProducts(rows: any[]): Product[] {
+    return rows.map((row) => this.mapProduct(row));
+  }
+
   // Products
   async getAllProducts(): Promise<Product[]> {
     const { data, error } = await supabase.from("products").select("*");
@@ -32,7 +50,7 @@ export class SupabaseStorage implements IStorage {
       console.error("Error fetching products:", error);
       return [];
     }
-    return data || [];
+    return data ? this.mapProducts(data) : [];
   }
 
   async getProduct(id: string): Promise<Product | undefined> {
@@ -45,28 +63,45 @@ export class SupabaseStorage implements IStorage {
       console.error("Error fetching product:", error);
       return undefined;
     }
-    return data || undefined;
+    return data ? this.mapProduct(data) : undefined;
   }
 
   async createProduct(product: InsertProduct): Promise<Product> {
     const { data, error } = await supabase
       .from("products")
-      .insert([product])
+      .insert([{
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        category: product.category,
+        image_url: product.imageUrl,
+        requires_prescription: product.requiresPrescription,
+        stock: product.stock,
+      }])
       .select()
       .single();
     if (error) {
       throw new Error(`Failed to create product: ${error.message}`);
     }
-    return data;
+    return this.mapProduct(data);
   }
 
   async updateProduct(
     id: string,
     updates: Partial<InsertProduct>
   ): Promise<Product | undefined> {
+    const mappedUpdates: any = {};
+    if (updates.name) mappedUpdates.name = updates.name;
+    if (updates.description) mappedUpdates.description = updates.description;
+    if (updates.price) mappedUpdates.price = updates.price;
+    if (updates.category) mappedUpdates.category = updates.category;
+    if (updates.imageUrl) mappedUpdates.image_url = updates.imageUrl;
+    if (updates.requiresPrescription !== undefined) mappedUpdates.requires_prescription = updates.requiresPrescription;
+    if (updates.stock !== undefined) mappedUpdates.stock = updates.stock;
+
     const { data, error } = await supabase
       .from("products")
-      .update(updates)
+      .update(mappedUpdates)
       .eq("id", id)
       .select()
       .single();
@@ -74,11 +109,41 @@ export class SupabaseStorage implements IStorage {
       console.error("Error updating product:", error);
       return undefined;
     }
-    return data || undefined;
+    return data ? this.mapProduct(data) : undefined;
   }
 
   async updateProductStock(id: string, newStock: number): Promise<Product | undefined> {
-    return this.updateProduct(id, { stock: newStock });
+    const { data, error } = await supabase
+      .from("products")
+      .update({ stock: newStock })
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) {
+      console.error("Error updating product stock:", error);
+      return undefined;
+    }
+    return data ? this.mapProduct(data) : undefined;
+  }
+
+  // Helper method to map Supabase order data to Order type
+  private mapOrder(row: any): Order {
+    return {
+      id: row.id,
+      customerName: row.customer_name,
+      customerEmail: row.customer_email,
+      customerPhone: row.customer_phone,
+      deliveryAddress: row.delivery_address,
+      deliveryCity: row.delivery_city,
+      deliveryPostalCode: row.delivery_postal_code,
+      total: row.total,
+      status: row.status,
+      createdAt: row.created_at,
+    };
+  }
+
+  private mapOrders(rows: any[]): Order[] {
+    return rows.map((row) => this.mapOrder(row));
   }
 
   // Orders
@@ -88,7 +153,7 @@ export class SupabaseStorage implements IStorage {
       console.error("Error fetching orders:", error);
       return [];
     }
-    return data || [];
+    return data ? this.mapOrders(data) : [];
   }
 
   async getOrder(id: string): Promise<Order | undefined> {
@@ -101,7 +166,7 @@ export class SupabaseStorage implements IStorage {
       console.error("Error fetching order:", error);
       return undefined;
     }
-    return data || undefined;
+    return data ? this.mapOrder(data) : undefined;
   }
 
   async getOrdersByCustomer(email: string): Promise<Order[]> {
@@ -113,7 +178,7 @@ export class SupabaseStorage implements IStorage {
       console.error("Error fetching customer orders:", error);
       return [];
     }
-    return data || [];
+    return data ? this.mapOrders(data) : [];
   }
 
   async createOrder(order: InsertOrder): Promise<Order> {
@@ -135,7 +200,7 @@ export class SupabaseStorage implements IStorage {
       throw new Error(`Failed to create order: ${error.message}`);
     }
 
-    const newOrder = data;
+    const newOrder = this.mapOrder(data);
 
     // Create order items and update stock
     if (order.items && order.items.length > 0) {
@@ -171,7 +236,23 @@ export class SupabaseStorage implements IStorage {
       console.error("Error updating order status:", error);
       return undefined;
     }
-    return data || undefined;
+    return data ? this.mapOrder(data) : undefined;
+  }
+
+  // Helper method to map Supabase order item data to OrderItem type
+  private mapOrderItem(row: any): OrderItem {
+    return {
+      id: row.id,
+      orderId: row.order_id,
+      productId: row.product_id,
+      productName: row.product_name,
+      quantity: row.quantity,
+      price: row.price,
+    };
+  }
+
+  private mapOrderItems(rows: any[]): OrderItem[] {
+    return rows.map((row) => this.mapOrderItem(row));
   }
 
   // Order Items
@@ -184,7 +265,7 @@ export class SupabaseStorage implements IStorage {
       console.error("Error fetching order items:", error);
       return [];
     }
-    return data || [];
+    return data ? this.mapOrderItems(data) : [];
   }
 
   async createOrderItem(item: InsertOrderItem): Promise<OrderItem> {
@@ -202,7 +283,7 @@ export class SupabaseStorage implements IStorage {
     if (error) {
       throw new Error(`Failed to create order item: ${error.message}`);
     }
-    return data;
+    return this.mapOrderItem(data);
   }
 
   // Initialization
