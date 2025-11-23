@@ -190,7 +190,7 @@ export default function AdminDashboard() {
                       <FormItem>
                         <FormLabel>Precio</FormLabel>
                         <FormControl>
-                          <Input type="number" step="0.01" data-testid="input-product-price" {...field} />
+                          <Input type="text" placeholder="0.00" data-testid="input-product-price" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
