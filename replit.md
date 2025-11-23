@@ -4,7 +4,7 @@
 
 FarmaPlus is a modern pharmaceutical e-commerce platform built as a full-stack web application. The system enables customers to browse medications, supplements, and personal care products, add items to a shopping cart, and complete purchases through a streamlined checkout process. The platform emphasizes medical trust, accessibility, and professional credibility while providing an efficient browsing and purchasing experience.
 
-The application is designed with a clear separation between client and server, using React for the frontend and Express for the backend, with an in-memory storage system currently in place (with support for PostgreSQL via Drizzle ORM).
+The application is designed with a clear separation between client and server, using React for the frontend and Express for the backend, with Supabase as the database backend for persistent data storage.
 
 ## User Preferences
 
@@ -48,9 +48,11 @@ Preferred communication style: Simple, everyday language.
 - ESM (ES Modules) for modern JavaScript module system
 
 **Data Layer:**
-- Currently using in-memory storage (`MemStorage` class)
-- Drizzle ORM configured for PostgreSQL migration path
+- **Supabase** as PostgreSQL backend with real-time capabilities
+- **@supabase/supabase-js** SDK for database interactions
+- TypeScript-first approach with proper type mapping between frontend/backend
 - Schema defined in shared directory for type consistency
+- Automatic data transformation between TypeScript camelCase and PostgreSQL snake_case
 
 **API Design:**
 - RESTful endpoints under `/api` prefix
@@ -98,10 +100,11 @@ Preferred communication style: Simple, everyday language.
 - Drizzle-zod integration for database schema validation
 
 **Storage Strategy:**
-- In-memory storage for development/testing
-- Interface-based design (`IStorage`) allows easy swap to database
-- Drizzle ORM configured for PostgreSQL when ready to migrate
-- Initial product data seeded on startup
+- Supabase PostgreSQL database for persistent data storage
+- `SupabaseStorage` class implements `IStorage` interface
+- Automatic data mapping between TypeScript types and database columns
+- Initial product data automatically seeded on first application startup
+- Support for transactions and data consistency
 
 **Form Validation:**
 - Client-side validation with react-hook-form
@@ -131,10 +134,9 @@ Preferred communication style: Simple, everyday language.
 - **Zod**: Schema validation and TypeScript type inference
 - **drizzle-zod**: Generate Zod schemas from Drizzle database schemas
 
-### Database (Configured, Not Currently Used)
-- **Drizzle ORM**: Type-safe SQL query builder
-- **@neondatabase/serverless**: PostgreSQL driver for serverless environments
-- **drizzle-kit**: Database migration tool
+### Database & Backend
+- **@supabase/supabase-js**: Supabase JavaScript client for PostgreSQL database operations
+- **Supabase PostgreSQL**: Cloud database with automatic backups and scaling
 
 ### Development Tools
 - **Vite**: Fast build tool and dev server
