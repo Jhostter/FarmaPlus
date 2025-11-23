@@ -1,6 +1,5 @@
-import { db } from "./db";
-import { products, orders, orderItems, type Product, type InsertProduct, type Order, type InsertOrder, type OrderItem, type InsertOrderItem } from "@shared/schema";
-import { eq, sql } from "drizzle-orm";
+import { supabase } from "./supabase";
+import type { Product, InsertProduct, Order, InsertOrder, OrderItem, InsertOrderItem } from "@shared/schema";
 
 export interface IStorage {
   // Products
@@ -25,58 +24,118 @@ export interface IStorage {
   seedInitialProducts(): Promise<void>;
 }
 
-export class DrizzleStorage implements IStorage {
+export class SupabaseStorage implements IStorage {
   // Products
   async getAllProducts(): Promise<Product[]> {
-    return await db.select().from(products);
+    const { data, error } = await supabase.from("products").select("*");
+    if (error) {
+      console.error("Error fetching products:", error);
+      return [];
+    }
+    return data || [];
   }
 
   async getProduct(id: string): Promise<Product | undefined> {
-    const result = await db.select().from(products).where(eq(products.id, id));
-    return result[0];
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("id", id)
+      .single();
+    if (error) {
+      console.error("Error fetching product:", error);
+      return undefined;
+    }
+    return data || undefined;
   }
 
   async createProduct(product: InsertProduct): Promise<Product> {
-    const result = await db.insert(products).values(product).returning();
-    return result[0];
+    const { data, error } = await supabase
+      .from("products")
+      .insert([product])
+      .select()
+      .single();
+    if (error) {
+      throw new Error(`Failed to create product: ${error.message}`);
+    }
+    return data;
   }
 
-  async updateProduct(id: string, updates: Partial<InsertProduct>): Promise<Product | undefined> {
-    const result = await db.update(products).set(updates).where(eq(products.id, id)).returning();
-    return result[0];
+  async updateProduct(
+    id: string,
+    updates: Partial<InsertProduct>
+  ): Promise<Product | undefined> {
+    const { data, error } = await supabase
+      .from("products")
+      .update(updates)
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) {
+      console.error("Error updating product:", error);
+      return undefined;
+    }
+    return data || undefined;
   }
 
   async updateProductStock(id: string, newStock: number): Promise<Product | undefined> {
-    const result = await db.update(products).set({ stock: newStock }).where(eq(products.id, id)).returning();
-    return result[0];
+    return this.updateProduct(id, { stock: newStock });
   }
 
   // Orders
   async getAllOrders(): Promise<Order[]> {
-    return await db.select().from(orders);
+    const { data, error } = await supabase.from("orders").select("*");
+    if (error) {
+      console.error("Error fetching orders:", error);
+      return [];
+    }
+    return data || [];
   }
 
   async getOrder(id: string): Promise<Order | undefined> {
-    const result = await db.select().from(orders).where(eq(orders.id, id));
-    return result[0];
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("id", id)
+      .single();
+    if (error) {
+      console.error("Error fetching order:", error);
+      return undefined;
+    }
+    return data || undefined;
   }
 
   async getOrdersByCustomer(email: string): Promise<Order[]> {
-    return await db.select().from(orders).where(eq(orders.customerEmail, email));
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("customer_email", email);
+    if (error) {
+      console.error("Error fetching customer orders:", error);
+      return [];
+    }
+    return data || [];
   }
 
   async createOrder(order: InsertOrder): Promise<Order> {
-    const result = await db.insert(orders).values({
-      customerName: order.customerName,
-      customerEmail: order.customerEmail,
-      customerPhone: order.customerPhone,
-      deliveryAddress: order.deliveryAddress,
-      deliveryCity: order.deliveryCity,
-      deliveryPostalCode: order.deliveryPostalCode,
-      total: order.total,
-    }).returning();
+    const { data, error } = await supabase
+      .from("orders")
+      .insert([{
+        customer_name: order.customerName,
+        customer_email: order.customerEmail,
+        customer_phone: order.customerPhone,
+        delivery_address: order.deliveryAddress,
+        delivery_city: order.deliveryCity,
+        delivery_postal_code: order.deliveryPostalCode,
+        total: order.total,
+        status: "pending",
+      }])
+      .select()
+      .single();
+    if (error) {
+      throw new Error(`Failed to create order: ${error.message}`);
+    }
 
-    const newOrder = result[0];
+    const newOrder = data;
 
     // Create order items and update stock
     if (order.items && order.items.length > 0) {
@@ -102,24 +161,54 @@ export class DrizzleStorage implements IStorage {
   }
 
   async updateOrderStatus(id: string, status: string): Promise<Order | undefined> {
-    const result = await db.update(orders).set({ status }).where(eq(orders.id, id)).returning();
-    return result[0];
+    const { data, error } = await supabase
+      .from("orders")
+      .update({ status })
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) {
+      console.error("Error updating order status:", error);
+      return undefined;
+    }
+    return data || undefined;
   }
 
   // Order Items
   async getOrderItems(orderId: string): Promise<OrderItem[]> {
-    return await db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+    const { data, error } = await supabase
+      .from("order_items")
+      .select("*")
+      .eq("order_id", orderId);
+    if (error) {
+      console.error("Error fetching order items:", error);
+      return [];
+    }
+    return data || [];
   }
 
   async createOrderItem(item: InsertOrderItem): Promise<OrderItem> {
-    const result = await db.insert(orderItems).values(item).returning();
-    return result[0];
+    const { data, error } = await supabase
+      .from("order_items")
+      .insert([{
+        order_id: item.orderId,
+        product_id: item.productId,
+        product_name: item.productName,
+        quantity: item.quantity,
+        price: item.price,
+      }])
+      .select()
+      .single();
+    if (error) {
+      throw new Error(`Failed to create order item: ${error.message}`);
+    }
+    return data;
   }
 
   // Initialization
   async seedInitialProducts(): Promise<void> {
-    const existingProducts = await this.getAllProducts();
-    if (existingProducts.length > 0) {
+    const existing = await this.getAllProducts();
+    if (existing.length > 0) {
       return; // Already seeded
     }
 
@@ -249,4 +338,4 @@ export class DrizzleStorage implements IStorage {
   }
 }
 
-export const storage = new DrizzleStorage();
+export const storage = new SupabaseStorage();

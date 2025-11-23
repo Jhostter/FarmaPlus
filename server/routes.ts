@@ -5,8 +5,22 @@ import { insertOrderSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize database on first request
+  let dbInitialized = false;
+  const initializeDB = async () => {
+    if (!dbInitialized) {
+      try {
+        await storage.seedInitialProducts();
+        dbInitialized = true;
+      } catch (error) {
+        console.error("Failed to initialize database:", error);
+      }
+    }
+  };
+
   // Get all products
   app.get("/api/products", async (_req, res) => {
+    await initializeDB();
     try {
       const products = await storage.getAllProducts();
       res.json(products);
