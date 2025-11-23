@@ -1,8 +1,25 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertOrderSchema } from "@shared/schema";
+import { insertOrderSchema, insertProductSchema, adminLoginSchema } from "@shared/schema";
 import { z } from "zod";
+import { supabase } from "./supabase";
+import jwt from "jsonwebtoken";
+
+// Middleware de autenticación
+const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ error: "No autorizado" });
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret-key");
+    (req as any).user = decoded;
+    next();
+  } catch {
+    res.status(401).json({ error: "Token inválido" });
+  }
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize database on first request
@@ -86,6 +103,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(orders);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch orders" });
+    }
+  });
+
+  // Admin routes
+  app.post("/api/admin/login", async (req, res) => {
+    try {
+      const { email, password } = adminLoginSchema.parse(req.body);
+
+      // Autenticar con Supabase Auth
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error || !data.session) {
+        return res.status(401).json({ error: "Email o contraseña incorrectos" });
+      }
+
+      // Crear JWT local para la sesión
+      const token = jwt.sign(
+        { email, userId: data.user?.id },
+        process.env.JWT_SECRET || "secret-key",
+        { expiresIn: "24h" }
+      );
+
+      res.json({ token });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Datos inválidos" });
+      }
+      res.status(500).json({ error: "Error al iniciar sesión" });
+    }
+  });
+
+  // Create product (admin only)
+  app.post("/api/admin/products", authMiddleware, async (req, res) => {
+    try {
+      const validatedData = insertProductSchema.parse(req.body);
+      const product = await storage.createProduct(validatedData);
+      res.status(201).json(product);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Datos inválidos" });
+      }
+      res.status(500).json({ error: "Error al crear producto" });
+    }
+  });
+
+  // Update product (admin only)
+  app.patch("/api/admin/products/:id", authMiddleware, async (req, res) => {
+    try {
+      const validatedData = insertProductSchema.partial().parse(req.body);
+      const product = await storage.updateProduct(req.params.id, validatedData);
+      if (!product) {
+        return res.status(404).json({ error: "Producto no encontrado" });
+      }
+      res.json(product);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Datos inválidos" });
+      }
+      res.status(500).json({ error: "Error al actualizar producto" });
+    }
+  });
+
+  // Delete product (admin only)
+  app.delete("/api/admin/products/:id", authMiddleware, async (req, res) => {
+    try {
+      await storage.deleteProduct(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar producto" });
     }
   });
 

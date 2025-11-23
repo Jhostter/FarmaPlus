@@ -8,6 +8,7 @@ export interface IStorage {
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(id: string, updates: Partial<InsertProduct>): Promise<Product | undefined>;
   updateProductStock(id: string, newStock: number): Promise<Product | undefined>;
+  deleteProduct(id: string): Promise<void>;
 
   // Orders
   getAllOrders(): Promise<Order[]>;
@@ -124,6 +125,13 @@ export class SupabaseStorage implements IStorage {
       return undefined;
     }
     return data ? this.mapProduct(data) : undefined;
+  }
+
+  async deleteProduct(id: string): Promise<void> {
+    const { error } = await supabase.from("products").delete().eq("id", id);
+    if (error) {
+      throw new Error(`Failed to delete product: ${error.message}`);
+    }
   }
 
   // Helper method to map Supabase order data to Order type
