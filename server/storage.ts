@@ -1,53 +1,138 @@
-import {
-  type Product,
-  type InsertProduct,
-  type Order,
-  type InsertOrder,
-  type OrderItem,
-  type InsertOrderItem,
-} from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// Image paths for products
-const vitaminImg = "/attached_assets/generated_images/vitamin_supplement_product.png";
-const painMedImg = "/attached_assets/generated_images/pain_medication_product.png";
-const sanitizerImg = "/attached_assets/generated_images/hand_sanitizer_product.png";
-const omega3Img = "/attached_assets/generated_images/omega-3_supplement_product.png";
-const allergyImg = "/attached_assets/generated_images/allergy_medication_product.png";
-const bandagesImg = "/attached_assets/generated_images/bandages_product.png";
-const probioticImg = "/attached_assets/generated_images/probiotic_supplement_product.png";
-const faceCreamImg = "/attached_assets/generated_images/face_cream_product.png";
+import { db } from "./db";
+import { products, orders, orderItems, type Product, type InsertProduct, type Order, type InsertOrder, type OrderItem, type InsertOrderItem } from "@shared/schema";
+import { eq, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Products
   getAllProducts(): Promise<Product[]>;
   getProduct(id: string): Promise<Product | undefined>;
   createProduct(product: InsertProduct): Promise<Product>;
+  updateProduct(id: string, updates: Partial<InsertProduct>): Promise<Product | undefined>;
+  updateProductStock(id: string, newStock: number): Promise<Product | undefined>;
 
   // Orders
   getAllOrders(): Promise<Order[]>;
   getOrder(id: string): Promise<Order | undefined>;
+  getOrdersByCustomer(email: string): Promise<Order[]>;
   createOrder(order: InsertOrder): Promise<Order>;
+  updateOrderStatus(id: string, status: string): Promise<Order | undefined>;
 
   // Order Items
   getOrderItems(orderId: string): Promise<OrderItem[]>;
   createOrderItem(orderItem: InsertOrderItem): Promise<OrderItem>;
+
+  // Initialization
+  seedInitialProducts(): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private products: Map<string, Product>;
-  private orders: Map<string, Order>;
-  private orderItems: Map<string, OrderItem>;
-
-  constructor() {
-    this.products = new Map();
-    this.orders = new Map();
-    this.orderItems = new Map();
-    this.initializeProducts();
+export class DrizzleStorage implements IStorage {
+  // Products
+  async getAllProducts(): Promise<Product[]> {
+    return await db.select().from(products);
   }
 
-  private initializeProducts() {
-    const initialProducts: Omit<Product, "id">[] = [
+  async getProduct(id: string): Promise<Product | undefined> {
+    const result = await db.select().from(products).where(eq(products.id, id));
+    return result[0];
+  }
+
+  async createProduct(product: InsertProduct): Promise<Product> {
+    const result = await db.insert(products).values(product).returning();
+    return result[0];
+  }
+
+  async updateProduct(id: string, updates: Partial<InsertProduct>): Promise<Product | undefined> {
+    const result = await db.update(products).set(updates).where(eq(products.id, id)).returning();
+    return result[0];
+  }
+
+  async updateProductStock(id: string, newStock: number): Promise<Product | undefined> {
+    const result = await db.update(products).set({ stock: newStock }).where(eq(products.id, id)).returning();
+    return result[0];
+  }
+
+  // Orders
+  async getAllOrders(): Promise<Order[]> {
+    return await db.select().from(orders);
+  }
+
+  async getOrder(id: string): Promise<Order | undefined> {
+    const result = await db.select().from(orders).where(eq(orders.id, id));
+    return result[0];
+  }
+
+  async getOrdersByCustomer(email: string): Promise<Order[]> {
+    return await db.select().from(orders).where(eq(orders.customerEmail, email));
+  }
+
+  async createOrder(order: InsertOrder): Promise<Order> {
+    const result = await db.insert(orders).values({
+      customerName: order.customerName,
+      customerEmail: order.customerEmail,
+      customerPhone: order.customerPhone,
+      deliveryAddress: order.deliveryAddress,
+      deliveryCity: order.deliveryCity,
+      deliveryPostalCode: order.deliveryPostalCode,
+      total: order.total,
+    }).returning();
+
+    const newOrder = result[0];
+
+    // Create order items and update stock
+    if (order.items && order.items.length > 0) {
+      for (const item of order.items) {
+        await this.createOrderItem({
+          orderId: newOrder.id,
+          productId: item.productId,
+          productName: item.productName,
+          quantity: item.quantity,
+          price: item.price,
+        });
+
+        // Reduce product stock
+        const product = await this.getProduct(item.productId);
+        if (product) {
+          const newStock = Math.max(0, product.stock - item.quantity);
+          await this.updateProductStock(item.productId, newStock);
+        }
+      }
+    }
+
+    return newOrder;
+  }
+
+  async updateOrderStatus(id: string, status: string): Promise<Order | undefined> {
+    const result = await db.update(orders).set({ status }).where(eq(orders.id, id)).returning();
+    return result[0];
+  }
+
+  // Order Items
+  async getOrderItems(orderId: string): Promise<OrderItem[]> {
+    return await db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+  }
+
+  async createOrderItem(item: InsertOrderItem): Promise<OrderItem> {
+    const result = await db.insert(orderItems).values(item).returning();
+    return result[0];
+  }
+
+  // Initialization
+  async seedInitialProducts(): Promise<void> {
+    const existingProducts = await this.getAllProducts();
+    if (existingProducts.length > 0) {
+      return; // Already seeded
+    }
+
+    const vitaminImg = "/attached_assets/generated_images/vitamin_supplement_product.png";
+    const painMedImg = "/attached_assets/generated_images/pain_medication_product.png";
+    const sanitizerImg = "/attached_assets/generated_images/hand_sanitizer_product.png";
+    const omega3Img = "/attached_assets/generated_images/omega-3_supplement_product.png";
+    const allergyImg = "/attached_assets/generated_images/allergy_medication_product.png";
+    const bandagesImg = "/attached_assets/generated_images/bandages_product.png";
+    const probioticImg = "/attached_assets/generated_images/probiotic_supplement_product.png";
+    const faceCreamImg = "/attached_assets/generated_images/face_cream_product.png";
+
+    const initialProducts: InsertProduct[] = [
       {
         name: "Vitamina C 1000mg",
         description: "Suplemento de vitamina C de alta potencia para fortalecer el sistema inmunológico. 60 comprimidos.",
@@ -158,82 +243,10 @@ export class MemStorage implements IStorage {
       },
     ];
 
-    initialProducts.forEach((product) => {
-      const id = randomUUID();
-      this.products.set(id, { ...product, id });
-    });
-  }
-
-  // Products
-  async getAllProducts(): Promise<Product[]> {
-    return Array.from(this.products.values());
-  }
-
-  async getProduct(id: string): Promise<Product | undefined> {
-    return this.products.get(id);
-  }
-
-  async createProduct(insertProduct: InsertProduct): Promise<Product> {
-    const id = randomUUID();
-    const product: Product = { ...insertProduct, id };
-    this.products.set(id, product);
-    return product;
-  }
-
-  // Orders
-  async getAllOrders(): Promise<Order[]> {
-    return Array.from(this.orders.values());
-  }
-
-  async getOrder(id: string): Promise<Order | undefined> {
-    return this.orders.get(id);
-  }
-
-  async createOrder(insertOrder: InsertOrder): Promise<Order> {
-    const id = randomUUID();
-    const order: Order = {
-      id,
-      customerName: insertOrder.customerName,
-      customerEmail: insertOrder.customerEmail,
-      customerPhone: insertOrder.customerPhone,
-      deliveryAddress: insertOrder.deliveryAddress,
-      deliveryCity: insertOrder.deliveryCity,
-      deliveryPostalCode: insertOrder.deliveryPostalCode,
-      total: insertOrder.total,
-      status: "pending",
-      createdAt: new Date(),
-    };
-    this.orders.set(id, order);
-
-    // Create order items
-    if (insertOrder.items && insertOrder.items.length > 0) {
-      for (const item of insertOrder.items) {
-        await this.createOrderItem({
-          orderId: id,
-          productId: item.productId,
-          productName: item.productName,
-          quantity: item.quantity,
-          price: item.price,
-        });
-      }
+    for (const product of initialProducts) {
+      await this.createProduct(product);
     }
-
-    return order;
-  }
-
-  // Order Items
-  async getOrderItems(orderId: string): Promise<OrderItem[]> {
-    return Array.from(this.orderItems.values()).filter(
-      (item) => item.orderId === orderId
-    );
-  }
-
-  async createOrderItem(insertOrderItem: InsertOrderItem): Promise<OrderItem> {
-    const id = randomUUID();
-    const orderItem: OrderItem = { ...insertOrderItem, id };
-    this.orderItems.set(id, orderItem);
-    return orderItem;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DrizzleStorage();
