@@ -227,7 +227,7 @@ export default function AdminDashboard() {
                         <FormLabel>URL de Imagen Principal</FormLabel>
                         <FormControl>
                           <Input
-                            type="url"
+                            type="text"
                             placeholder="https://ejemplo.com/imagen.jpg"
                             data-testid="input-product-imageUrl"
                             {...field}
@@ -249,7 +249,7 @@ export default function AdminDashboard() {
                           <div className="space-y-2">
                             <div className="flex gap-2">
                               <Input
-                                type="url"
+                                type="text"
                                 placeholder="https://ejemplo.com/imagen2.jpg"
                                 value={newUrl}
                                 onChange={(e) => setNewUrl(e.target.value)}
