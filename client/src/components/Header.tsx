@@ -1,4 +1,4 @@
-import { ShoppingCart, Search } from "lucide-react";
+import { ShoppingCart, Search, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -36,24 +36,36 @@ export function Header({ cartItemCount, onCartClick, searchQuery, onSearchChange
             </div>
           </div>
 
-          <Button
-            variant="outline"
-            size="default"
-            className="relative"
-            onClick={onCartClick}
-            data-testid="button-cart"
-          >
-            <ShoppingCart className="h-5 w-5" />
-            {cartItemCount > 0 && (
-              <Badge
-                variant="destructive"
-                className="absolute -top-2 -right-2 h-5 min-w-5 flex items-center justify-center p-0 px-1"
-                data-testid="badge-cart-count"
+          <div className="flex gap-2">
+            <Link href="/admin/login">
+              <Button
+                variant="ghost"
+                size="icon"
+                data-testid="button-admin-login"
+                title="Panel de administración"
               >
-                {cartItemCount}
-              </Badge>
-            )}
-          </Button>
+                <Settings className="h-5 w-5" />
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              size="default"
+              className="relative"
+              onClick={onCartClick}
+              data-testid="button-cart"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {cartItemCount > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="absolute -top-2 -right-2 h-5 min-w-5 flex items-center justify-center p-0 px-1"
+                  data-testid="badge-cart-count"
+                >
+                  {cartItemCount}
+                </Badge>
+              )}
+            </Button>
+          </div>
         </div>
 
         <div className="sm:hidden pb-4">

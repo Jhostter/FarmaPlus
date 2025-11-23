@@ -39,6 +39,8 @@ Preferred communication style: Simple, everyday language.
 - `/productos` - Full product catalog with filtering
 - `/checkout` - Checkout form for order completion
 - `/confirmacion/:id` - Order confirmation page
+- `/admin/login` - Admin employee login portal
+- `/admin` - Protected admin dashboard for product management
 
 ### Backend Architecture
 
@@ -66,6 +68,10 @@ Preferred communication style: Simple, everyday language.
 - `POST /api/orders` - Create new order
 - `GET /api/orders/:id` - Retrieve order details
 - `GET /api/orders/:id/items` - Retrieve order items
+- `POST /api/admin/login` - Employee login (returns JWT token)
+- `POST /api/admin/products` - Create new product (admin only)
+- `PATCH /api/admin/products/:id` - Update product (admin only)
+- `DELETE /api/admin/products/:id` - Delete product (admin only)
 
 **Environment-Specific Builds:**
 - Development: Hot module reloading with Vite middleware
@@ -116,6 +122,20 @@ Preferred communication style: Simple, everyday language.
 - Pre-generated product images
 - Responsive image handling
 
+## Admin Panel Features
+
+**Authentication:**
+- Uses Supabase Auth for employee authentication
+- JWT tokens for session management (24-hour expiry)
+- Protected routes with client-side and server-side validation
+
+**Product Management:**
+- View all products in a responsive table
+- Create new products with all details (name, description, price, category, stock, etc.)
+- Edit existing products inline
+- Delete products with confirmation
+- Real-time updates using React Query cache invalidation
+
 ## External Dependencies
 
 ### UI Component Library
@@ -137,6 +157,7 @@ Preferred communication style: Simple, everyday language.
 ### Database & Backend
 - **@supabase/supabase-js**: Supabase JavaScript client for PostgreSQL database operations
 - **Supabase PostgreSQL**: Cloud database with automatic backups and scaling
+- **jsonwebtoken**: JWT token generation for admin authentication
 
 ### Development Tools
 - **Vite**: Fast build tool and dev server
