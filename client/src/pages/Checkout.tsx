@@ -129,20 +129,20 @@ export default function Checkout() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-muted/30 py-4 sm:py-8">
+      <div className="max-w-6xl mx-auto px-4">
         <Link href="/">
-          <Button variant="ghost" className="mb-6" data-testid="button-back">
+          <Button variant="ghost" className="mb-4 sm:mb-6" data-testid="button-back">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver
           </Button>
         </Link>
 
-        <h1 className="text-4xl font-semibold mb-8" data-testid="text-checkout-title">
+        <h1 className="text-2xl sm:text-4xl font-semibold mb-6 sm:mb-8" data-testid="text-checkout-title">
           Finalizar Pedido
         </h1>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Order Form */}
           <div className="lg:col-span-2">
             <Card>
@@ -285,7 +285,7 @@ export default function Checkout() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <Card className="sticky top-24">
+            <Card className="sticky top-20 lg:top-24">
               <CardHeader>
                 <CardTitle>Resumen del Pedido</CardTitle>
               </CardHeader>

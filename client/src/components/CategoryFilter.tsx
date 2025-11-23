@@ -24,11 +24,11 @@ export function CategoryFilter({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">Filtros</CardTitle>
+        <CardTitle className="text-lg lg:text-xl">Filtros</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-4">
-          <h3 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">
+      <CardContent className="space-y-4 lg:space-y-6">
+        <div className="space-y-3 lg:space-y-4">
+          <h3 className="font-medium text-xs lg:text-sm uppercase tracking-wide text-muted-foreground">
             Categorías
           </h3>
           <div className="space-y-3">
@@ -53,8 +53,8 @@ export function CategoryFilter({
           </div>
         </div>
 
-        <div className="space-y-4">
-          <h3 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">
+        <div className="space-y-3 lg:space-y-4">
+          <h3 className="font-medium text-xs lg:text-sm uppercase tracking-wide text-muted-foreground">
             Rango de Precio
           </h3>
           <div className="space-y-4">

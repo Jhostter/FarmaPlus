@@ -45,7 +45,7 @@ export default function Home() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative h-[60vh] min-h-[500px] overflow-hidden">
+        <section className="relative h-[50vh] sm:h-[60vh] min-h-[350px] sm:min-h-[500px] overflow-hidden">
           <div className="absolute inset-0">
             <img
               src={heroImage}
@@ -56,28 +56,28 @@ export default function Home() {
           </div>
           <div className="relative h-full flex items-center justify-center">
             <div className="max-w-4xl mx-auto px-4 text-center">
-              <h2 className="text-4xl md:text-5xl font-semibold text-white mb-6" data-testid="text-hero-title">
+              <h2 className="text-2xl sm:text-4xl md:text-5xl font-semibold text-white mb-4 sm:mb-6" data-testid="text-hero-title">
                 Tu Salud, Nuestra Prioridad
               </h2>
-              <p className="text-xl text-white/90 mb-8 leading-relaxed max-w-2xl mx-auto">
+              <p className="text-sm sm:text-lg md:text-xl text-white/90 mb-6 sm:mb-8 leading-relaxed max-w-2xl mx-auto">
                 Encuentra medicamentos, suplementos y productos de cuidado personal
                 con la mejor atención y entrega rápida
               </p>
-              <div className="flex flex-wrap gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 justify-center">
                 <Link href="/productos">
                   <Button
-                    size="lg"
+                    size="default"
                     variant="outline"
-                    className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
+                    className="w-full sm:w-auto bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
                     data-testid="button-hero-products"
                   >
                     Ver Productos
                   </Button>
                 </Link>
                 <Button
-                  size="lg"
+                  size="default"
                   variant="outline"
-                  className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
+                  className="w-full sm:w-auto bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
                   data-testid="button-hero-contact"
                 >
                   Contactar
@@ -88,12 +88,12 @@ export default function Home() {
         </section>
 
         {/* Categories Section */}
-        <section className="py-12 bg-muted/30">
+        <section className="py-8 sm:py-12 bg-muted/30">
           <div className="max-w-6xl mx-auto px-4">
-            <h3 className="text-3xl font-semibold text-center mb-8" data-testid="text-categories-title">
+            <h3 className="text-2xl sm:text-3xl font-semibold text-center mb-6 sm:mb-8" data-testid="text-categories-title">
               Nuestras Categorías
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
               {categories.map((category) => (
                 <Link key={category.name} href="/productos">
                   <Card className="hover-elevate active-elevate-2 cursor-pointer h-full" data-testid={`card-category-${category.name}`}>
@@ -111,10 +111,10 @@ export default function Home() {
         </section>
 
         {/* Featured Products */}
-        <section className="py-12">
+        <section className="py-8 sm:py-12">
           <div className="max-w-6xl mx-auto px-4">
-            <div className="flex items-center justify-between mb-8">
-              <h3 className="text-3xl font-semibold" data-testid="text-featured-title">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+              <h3 className="text-2xl sm:text-3xl font-semibold" data-testid="text-featured-title">
                 Productos Destacados
               </h3>
               <Link href="/productos">
@@ -125,7 +125,7 @@ export default function Home() {
             </div>
 
             {isLoading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
                 {[...Array(8)].map((_, i) => (
                   <Card key={i}>
                     <Skeleton className="aspect-square rounded-t-md" />
@@ -139,7 +139,7 @@ export default function Home() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
                 {featuredProducts.map((product) => (
                   <ProductCard
                     key={product.id}
@@ -153,9 +153,9 @@ export default function Home() {
         </section>
 
         {/* Trust Section */}
-        <section className="py-12 bg-muted/30">
+        <section className="py-8 sm:py-12 bg-muted/30">
           <div className="max-w-6xl mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
               <div className="flex flex-col items-center text-center" data-testid="trust-shipping">
                 <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                   <Truck className="h-8 w-8 text-primary" />

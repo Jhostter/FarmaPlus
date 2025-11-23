@@ -6,11 +6,14 @@ import { ProductCard } from "@/components/ProductCard";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Filter, X } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import type { Product } from "@shared/schema";
 
 export default function Catalog() {
   const [cartOpen, setCartOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 200]);
@@ -66,15 +69,26 @@ export default function Catalog() {
         onSearchChange={setSearchQuery}
       />
 
-      <main className="flex-1 py-8">
+      <main className="flex-1 py-4 sm:py-8">
         <div className="max-w-7xl mx-auto px-4">
-          <h1 className="text-4xl font-semibold mb-8" data-testid="text-catalog-title">
-            Todos los Productos
-          </h1>
+          <div className="flex items-center justify-between mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-4xl font-semibold" data-testid="text-catalog-title">
+              Todos los Productos
+            </h1>
+            <Button
+              variant="outline"
+              size="icon"
+              className="lg:hidden"
+              onClick={() => setFiltersOpen(!filtersOpen)}
+              data-testid="button-toggle-filters"
+            >
+              {filtersOpen ? <X className="h-5 w-5" /> : <Filter className="h-5 w-5" />}
+            </Button>
+          </div>
 
-          <div className="flex gap-8">
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
             {/* Sidebar Filters */}
-            <aside className="hidden lg:block w-64 flex-shrink-0">
+            <aside className={`${filtersOpen ? "block" : "hidden"} lg:block w-full lg:w-64 flex-shrink-0`}>
               <div className="sticky top-24">
                 <CategoryFilter
                   categories={categories}
@@ -90,7 +104,7 @@ export default function Catalog() {
             {/* Products Grid */}
             <div className="flex-1">
               {isLoading ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
                   {[...Array(9)].map((_, i) => (
                     <Card key={i}>
                       <Skeleton className="aspect-square rounded-t-md" />
@@ -105,16 +119,16 @@ export default function Catalog() {
                 </div>
               ) : filteredProducts.length === 0 ? (
                 <div className="text-center py-12" data-testid="empty-products">
-                  <p className="text-lg text-muted-foreground">
+                  <p className="text-base sm:text-lg text-muted-foreground">
                     No se encontraron productos
                   </p>
                 </div>
               ) : (
                 <>
-                  <p className="text-sm text-muted-foreground mb-4" data-testid="text-product-count">
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-4" data-testid="text-product-count">
                     {filteredProducts.length} productos encontrados
                   </p>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
                     {filteredProducts.map((product) => (
                       <ProductCard
                         key={product.id}
