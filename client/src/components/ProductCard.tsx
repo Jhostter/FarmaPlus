@@ -2,6 +2,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, ShoppingCart } from "lucide-react";
+import { ImageGallery } from "@/components/ImageGallery";
 import type { Product } from "@shared/schema";
 
 interface ProductCardProps {
@@ -10,17 +11,19 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onAddToCart }: ProductCardProps) {
+  // Combinar imageUrl con imageUrls para compatibilidad
+  const allImages = product.imageUrls && product.imageUrls.length > 0
+    ? product.imageUrls
+    : [product.imageUrl];
+
   return (
     <Card className="flex flex-col h-full hover-elevate" data-testid={`card-product-${product.id}`}>
       <CardHeader className="p-0">
-        <div className="aspect-square relative overflow-hidden rounded-t-md bg-muted">
-          <img
-            src={product.imageUrl}
-            alt={product.name}
-            className="w-full h-full object-cover"
-            data-testid={`img-product-${product.id}`}
-          />
-        </div>
+        <ImageGallery
+          images={allImages}
+          productName={product.name}
+          testId={`img-product-${product.id}`}
+        />
       </CardHeader>
       <CardContent className="flex-1 p-4 space-y-2">
         <div className="flex items-start justify-between gap-2">

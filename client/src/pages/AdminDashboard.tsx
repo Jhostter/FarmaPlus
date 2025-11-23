@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { insertProductSchema, type Product } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Plus, LogOut, Edit, Trash2 } from "lucide-react";
+import { Plus, LogOut, Edit, Trash2, X } from "lucide-react";
 
 export default function AdminDashboard() {
   const [, setLocation] = useLocation();
@@ -30,6 +30,7 @@ export default function AdminDashboard() {
       price: "0",
       category: "Medicamentos",
       imageUrl: "",
+      imageUrls: [] as any,
       requiresPrescription: 0,
       stock: 100,
     },
@@ -108,6 +109,7 @@ export default function AdminDashboard() {
       price: product.price,
       category: product.category,
       imageUrl: product.imageUrl,
+      imageUrls: (product.imageUrls || []) as any,
       requiresPrescription: product.requiresPrescription,
       stock: product.stock,
     });
@@ -222,7 +224,7 @@ export default function AdminDashboard() {
                     name="imageUrl"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>URL de Imagen</FormLabel>
+                        <FormLabel>URL de Imagen Principal</FormLabel>
                         <FormControl>
                           <Input
                             type="url"
@@ -234,6 +236,65 @@ export default function AdminDashboard() {
                         <FormMessage />
                       </FormItem>
                     )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="imageUrls"
+                    render={({ field }) => {
+                      const [newUrl, setNewUrl] = useState("");
+                      return (
+                        <FormItem>
+                          <FormLabel>URLs de Imágenes Adicionales</FormLabel>
+                          <div className="space-y-2">
+                            <div className="flex gap-2">
+                              <Input
+                                type="url"
+                                placeholder="https://ejemplo.com/imagen2.jpg"
+                                value={newUrl}
+                                onChange={(e) => setNewUrl(e.target.value)}
+                                data-testid="input-additional-imageUrl"
+                              />
+                              <Button
+                                type="button"
+                                onClick={() => {
+                                  if (newUrl.trim()) {
+                                    const updated = [...(field.value || []), newUrl];
+                                    field.onChange(updated);
+                                    setNewUrl("");
+                                  }
+                                }}
+                                data-testid="button-add-image"
+                              >
+                                Agregar
+                              </Button>
+                            </div>
+                            {field.value && field.value.length > 0 && (
+                              <div className="space-y-2">
+                                {field.value.map((url: string, index: number) => (
+                                  <div key={index} className="flex items-center justify-between bg-slate-100 dark:bg-slate-700 p-2 rounded">
+                                    <span className="text-sm truncate text-slate-600 dark:text-slate-400">{url}</span>
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => {
+                                        const updated = field.value!.filter((_: string, i: number) => i !== index);
+                                        field.onChange(updated);
+                                      }}
+                                      data-testid={`button-remove-image-${index}`}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
 
                   <FormField

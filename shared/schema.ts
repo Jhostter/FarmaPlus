@@ -10,6 +10,7 @@ export const products = pgTable("products", {
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   category: text("category").notNull(),
   imageUrl: text("image_url").notNull(),
+  imageUrls: text("image_urls").array().default(sql`ARRAY[]::text[]`),
   requiresPrescription: integer("requires_prescription").notNull().default(0),
   stock: integer("stock").notNull().default(100),
 });
