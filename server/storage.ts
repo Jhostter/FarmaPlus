@@ -69,6 +69,11 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createProduct(product: InsertProduct): Promise<Product> {
+    // Ensure imageUrls contains at least the main imageUrl
+    const allUrls = product.imageUrls && product.imageUrls.length > 0
+      ? [product.imageUrl, ...product.imageUrls.filter(url => url !== product.imageUrl)]
+      : [product.imageUrl];
+
     const { data, error } = await supabase
       .from("products")
       .insert([{
@@ -77,7 +82,7 @@ export class SupabaseStorage implements IStorage {
         price: product.price,
         category: product.category,
         image_url: product.imageUrl,
-        image_urls: product.imageUrls || [],
+        image_urls: allUrls,
         requires_prescription: product.requiresPrescription,
         stock: product.stock,
       }])
@@ -99,7 +104,24 @@ export class SupabaseStorage implements IStorage {
     if (updates.price) mappedUpdates.price = updates.price;
     if (updates.category) mappedUpdates.category = updates.category;
     if (updates.imageUrl) mappedUpdates.image_url = updates.imageUrl;
-    if (updates.imageUrls !== undefined) mappedUpdates.image_urls = updates.imageUrls || [];
+    
+    // Handle imageUrls: ensure it always includes imageUrl + additional URLs
+    if (updates.imageUrls !== undefined || updates.imageUrl !== undefined) {
+      const imageUrl = updates.imageUrl;
+      const imageUrls = updates.imageUrls;
+      
+      if (imageUrls && imageUrls.length > 0) {
+        // If we have additional URLs, combine with main imageUrl
+        const allUrls = imageUrl
+          ? [imageUrl, ...imageUrls.filter(url => url !== imageUrl)]
+          : imageUrls;
+        mappedUpdates.image_urls = allUrls;
+      } else if (imageUrl) {
+        // If only imageUrl is updated, use it as the only image
+        mappedUpdates.image_urls = [imageUrl];
+      }
+    }
+    
     if (updates.requiresPrescription !== undefined) mappedUpdates.requires_prescription = updates.requiresPrescription;
     if (updates.stock !== undefined) mappedUpdates.stock = updates.stock;
 
