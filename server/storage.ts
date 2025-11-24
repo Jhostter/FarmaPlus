@@ -224,12 +224,13 @@ export class SupabaseStorage implements IStorage {
         delivery_address: order.deliveryAddress,
         delivery_city: order.deliveryCity,
         delivery_postal_code: order.deliveryPostalCode,
-        total: order.total,
+        total: parseFloat(order.total),
         status: "pending",
       }])
       .select()
       .single();
     if (error) {
+      console.error("Error creating order in DB:", error);
       throw new Error(`Failed to create order: ${error.message}`);
     }
 
@@ -242,14 +243,15 @@ export class SupabaseStorage implements IStorage {
           orderId: newOrder.id,
           productId: item.productId,
           productName: item.productName,
-          quantity: item.quantity,
-          price: item.price,
+          quantity: typeof item.quantity === 'string' ? parseInt(item.quantity) : item.quantity,
+          price: typeof item.price === 'string' ? item.price : String(item.price),
         });
 
         // Reduce product stock
         const product = await this.getProduct(item.productId);
         if (product) {
-          const newStock = Math.max(0, product.stock - item.quantity);
+          const quantityNum = typeof item.quantity === 'string' ? parseInt(item.quantity) : item.quantity;
+          const newStock = Math.max(0, product.stock - quantityNum);
           await this.updateProductStock(item.productId, newStock);
         }
       }
@@ -309,11 +311,12 @@ export class SupabaseStorage implements IStorage {
         product_id: item.productId,
         product_name: item.productName,
         quantity: item.quantity,
-        price: item.price,
+        price: parseFloat(typeof item.price === 'string' ? item.price : String(item.price)),
       }])
       .select()
       .single();
     if (error) {
+      console.error("Error creating order item in DB:", error);
       throw new Error(`Failed to create order item: ${error.message}`);
     }
     return this.mapOrderItem(data);
