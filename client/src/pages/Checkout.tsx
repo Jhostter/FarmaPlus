@@ -70,7 +70,8 @@ export default function Checkout() {
 
   const createOrderMutation = useMutation({
     mutationFn: async (data: CheckoutFormData) => {
-      return apiRequest("POST", "/api/orders", data);
+      const res = await apiRequest("POST", "/api/orders", data);
+      return res.json();
     },
     onSuccess: (data) => {
       clearCart();
