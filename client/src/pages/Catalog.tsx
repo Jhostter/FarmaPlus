@@ -69,16 +69,16 @@ export default function Catalog() {
         onSearchChange={setSearchQuery}
       />
 
-      <main className="flex-1 py-4 sm:py-8">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-6 sm:mb-8">
-            <h1 className="text-2xl sm:text-4xl font-semibold" data-testid="text-catalog-title">
+      <main className="flex-1 py-4 sm:py-8 w-full overflow-x-hidden">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 w-full">
+          <div className="flex items-center justify-between mb-6 sm:mb-8 gap-2">
+            <h1 className="text-xl sm:text-3xl md:text-4xl font-semibold truncate" data-testid="text-catalog-title">
               Todos los Productos
             </h1>
             <Button
               variant="outline"
               size="icon"
-              className="lg:hidden"
+              className="lg:hidden flex-shrink-0"
               onClick={() => setFiltersOpen(!filtersOpen)}
               data-testid="button-toggle-filters"
             >
@@ -86,10 +86,10 @@ export default function Catalog() {
             </Button>
           </div>
 
-          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
             {/* Sidebar Filters */}
-            <aside className={`${filtersOpen ? "block" : "hidden"} lg:block w-full lg:w-64 flex-shrink-0`}>
-              <div className="sticky top-24">
+            <aside className={`${filtersOpen ? "block" : "hidden"} lg:block w-full lg:w-64 lg:flex-shrink-0 overflow-hidden`}>
+              <div className="sticky top-20 lg:top-24 z-40">
                 <CategoryFilter
                   categories={categories}
                   selectedCategories={selectedCategories}
@@ -102,33 +102,33 @@ export default function Catalog() {
             </aside>
 
             {/* Products Grid */}
-            <div className="flex-1">
+            <div className="flex-1 w-full overflow-hidden">
               {isLoading ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
-                  {[...Array(9)].map((_, i) => (
-                    <Card key={i}>
+                <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4 md:gap-6 w-full">
+                  {[...Array(12)].map((_, i) => (
+                    <Card key={i} className="flex flex-col h-full">
                       <Skeleton className="aspect-square rounded-t-md" />
-                      <div className="p-4 space-y-2">
+                      <div className="p-3 sm:p-4 space-y-2 flex-1">
                         <Skeleton className="h-4 w-3/4" />
                         <Skeleton className="h-3 w-1/2" />
                         <Skeleton className="h-3 w-full" />
-                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-8 w-full mt-auto" />
                       </div>
                     </Card>
                   ))}
                 </div>
               ) : filteredProducts.length === 0 ? (
-                <div className="text-center py-12" data-testid="empty-products">
+                <div className="text-center py-12 w-full" data-testid="empty-products">
                   <p className="text-base sm:text-lg text-muted-foreground">
                     No se encontraron productos
                   </p>
                 </div>
               ) : (
-                <>
+                <div className="w-full">
                   <p className="text-xs sm:text-sm text-muted-foreground mb-4" data-testid="text-product-count">
                     {filteredProducts.length} productos encontrados
                   </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
+                  <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4 md:gap-6 w-full">
                     {filteredProducts.map((product) => (
                       <ProductCard
                         key={product.id}
@@ -137,7 +137,7 @@ export default function Catalog() {
                       />
                     ))}
                   </div>
-                </>
+                </div>
               )}
             </div>
           </div>
