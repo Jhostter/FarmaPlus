@@ -265,7 +265,7 @@ export default function Home() {
             </div>
           </div>
           <div className="text-center text-sm text-muted-foreground border-t pt-8">
-            <p>© 2024 FarmaPlus. Todos los derechos reservados.</p>
+            <p>© 2025 FarmaPlus. Todos los derechos reservados.</p>
             <p className="mt-2">
               Los productos farmacéuticos deben ser usados bajo supervisión médica.
             </p>
