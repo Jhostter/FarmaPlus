@@ -62,32 +62,39 @@ export default function Checkout() {
     setIsSubmitting(true);
 
     try {
+      const payload = {
+        customerName: formData.customerName,
+        customerEmail: formData.customerEmail,
+        customerPhone: formData.customerPhone,
+        deliveryAddress: formData.deliveryAddress,
+        deliveryCity: formData.deliveryCity,
+        deliveryPostalCode: formData.deliveryPostalCode,
+        total: total.toFixed(2),
+        items: cart.map(item => ({
+          productId: item.product.id,
+          productName: item.product.name,
+          quantity: Number(item.quantity),
+          price: String(item.product.price),
+        })),
+      };
+
+      console.log("Enviando payload:", payload);
+
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerName: formData.customerName,
-          customerEmail: formData.customerEmail,
-          customerPhone: formData.customerPhone,
-          deliveryAddress: formData.deliveryAddress,
-          deliveryCity: formData.deliveryCity,
-          deliveryPostalCode: formData.deliveryPostalCode,
-          total: total.toFixed(2),
-          items: cart.map(item => ({
-            productId: item.product.id,
-            productName: item.product.name,
-            quantity: item.quantity,
-            price: item.product.price,
-          })),
-        }),
+        body: JSON.stringify(payload),
       });
 
+      console.log("Response status:", response.status);
+      const responseData = await response.json();
+      console.log("Response data:", responseData);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Error creating order");
+        throw new Error(responseData.error || "Error creating order");
       }
 
-      const order = await response.json();
+      const order = responseData;
       clearCart();
       navigate(`/confirmacion/${order.id}`);
     } catch (error) {
