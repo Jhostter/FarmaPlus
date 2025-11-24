@@ -1,6 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -38,6 +37,7 @@ export default function Checkout() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { cart, clearCart } = useCart();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutFormSchema),
@@ -68,24 +68,6 @@ export default function Checkout() {
     0
   );
 
-  const createOrderMutation = useMutation({
-    mutationFn: async (data: CheckoutFormData) => {
-      const res = await apiRequest("POST", "/api/orders", data);
-      return res.json();
-    },
-    onSuccess: (data) => {
-      clearCart();
-      navigate(`/confirmacion/${data.id}`);
-    },
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No se pudo procesar el pedido. Intenta nuevamente.",
-      });
-    },
-  });
-
   const onSubmit = async (data: CheckoutFormData) => {
     if (cart.length === 0) {
       toast({
@@ -96,29 +78,36 @@ export default function Checkout() {
       return;
     }
 
-    const currentTotal = cart.reduce(
-      (sum, item) => sum + parseFloat(item.product.price) * item.quantity,
-      0
-    );
+    setIsSubmitting(true);
 
-    const orderData = {
-      customerName: data.customerName,
-      customerEmail: data.customerEmail,
-      customerPhone: data.customerPhone,
-      deliveryAddress: data.deliveryAddress,
-      deliveryCity: data.deliveryCity,
-      deliveryPostalCode: data.deliveryPostalCode,
-      total: currentTotal.toFixed(2),
-      items: cart.map(item => ({
-        productId: item.product.id,
-        productName: item.product.name,
-        quantity: item.quantity,
-        price: item.product.price,
-      })),
-    };
-    
     try {
-      const res = await apiRequest("POST", "/api/orders", orderData);
+      const currentTotal = cart.reduce(
+        (sum, item) => sum + parseFloat(item.product.price) * item.quantity,
+        0
+      );
+
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: data.customerName,
+          customerEmail: data.customerEmail,
+          customerPhone: data.customerPhone,
+          deliveryAddress: data.deliveryAddress,
+          deliveryCity: data.deliveryCity,
+          deliveryPostalCode: data.deliveryPostalCode,
+          total: currentTotal.toFixed(2),
+          items: cart.map(item => ({
+            productId: item.product.id,
+            productName: item.product.name,
+            quantity: item.quantity,
+            price: item.product.price,
+          })),
+        }),
+      });
+
+      if (!res.ok) throw new Error("Error creating order");
+      
       const order = await res.json();
       clearCart();
       navigate(`/confirmacion/${order.id}`);
@@ -128,6 +117,7 @@ export default function Checkout() {
         title: "Error",
         description: "No se pudo procesar el pedido.",
       });
+      setIsSubmitting(false);
     }
   };
 
@@ -290,10 +280,10 @@ export default function Checkout() {
                       type="submit"
                       size="lg"
                       className="w-full"
-                      disabled={createOrderMutation.isPending}
+                      disabled={isSubmitting}
                       data-testid="button-submit-order"
                     >
-                      {createOrderMutation.isPending ? "Procesando..." : "Confirmar Pedido"}
+                      {isSubmitting ? "Procesando..." : "Confirmar Pedido"}
                     </Button>
                   </form>
                 </Form>
