@@ -136,6 +136,30 @@ Preferred communication style: Simple, everyday language.
 - Delete products with confirmation
 - Real-time updates using React Query cache invalidation
 
+## Recent Changes (Session 2)
+
+**Fixed Checkout Flow:**
+- ✅ Simplified checkout to use plain HTML form instead of complex react-hook-form
+- ✅ Direct fetch() API calls instead of React Query mutations
+- ✅ Fixed type conversion for total (string to number) and price fields
+- ✅ Proper validation and error handling in server routes
+
+**Language Localization:**
+- ✅ All user-facing text is now in Spanish
+- ✅ All error messages in API responses are in Spanish
+- ✅ All form labels, buttons, and notifications are in Spanish
+- ✅ 404 page error message in Spanish
+- ✅ Payment processing page messages in Spanish
+
+**Complete Checkout Process:**
+- ✅ Product catalog with search and categories
+- ✅ Shopping cart with add/remove/update quantity
+- ✅ Checkout form with customer delivery information
+- ✅ Order creation and storage in Supabase
+- ✅ 2-second payment processing animation
+- ✅ Order confirmation page with digital invoice download
+- ✅ Automatic stock reduction on purchase
+
 ## External Dependencies
 
 ### UI Component Library

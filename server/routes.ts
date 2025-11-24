@@ -42,7 +42,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const products = await storage.getAllProducts();
       res.json(products);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch products" });
+      res.status(500).json({ error: "No se pudieron obtener los productos" });
     }
   });
 
@@ -51,11 +51,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const product = await storage.getProduct(req.params.id);
       if (!product) {
-        return res.status(404).json({ error: "Product not found" });
+        return res.status(404).json({ error: "Producto no encontrado" });
       }
       res.json(product);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch product" });
+      res.status(500).json({ error: "No se pudo obtener el producto" });
     }
   });
 
@@ -67,9 +67,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(order);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: "Invalid order data", details: error.errors });
+        return res.status(400).json({ error: "Datos de pedido inválidos", details: error.errors });
       }
-      res.status(500).json({ error: "Failed to create order" });
+      res.status(500).json({ error: "No se pudo crear el pedido" });
     }
   });
 
@@ -78,11 +78,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const order = await storage.getOrder(req.params.id);
       if (!order) {
-        return res.status(404).json({ error: "Order not found" });
+        return res.status(404).json({ error: "Pedido no encontrado" });
       }
       res.json(order);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch order" });
+      res.status(500).json({ error: "No se pudo obtener el pedido" });
     }
   });
 
@@ -92,7 +92,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orderItems = await storage.getOrderItems(req.params.id);
       res.json(orderItems);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch order items" });
+      res.status(500).json({ error: "No se pudieron obtener los artículos del pedido" });
     }
   });
 
@@ -102,7 +102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orders = await storage.getAllOrders();
       res.json(orders);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch orders" });
+      res.status(500).json({ error: "No se pudieron obtener los pedidos" });
     }
   });
 
@@ -145,9 +145,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(product);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: "Datos inválidos" });
+        return res.status(400).json({ error: "Datos del producto inválidos" });
       }
-      res.status(500).json({ error: "Error al crear producto" });
+      res.status(500).json({ error: "No se pudo crear el producto" });
     }
   });
 
@@ -162,9 +162,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(product);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: "Datos inválidos" });
+        return res.status(400).json({ error: "Datos del producto inválidos" });
       }
-      res.status(500).json({ error: "Error al actualizar producto" });
+      res.status(500).json({ error: "No se pudo actualizar el producto" });
     }
   });
 
@@ -174,7 +174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.deleteProduct(req.params.id);
       res.json({ success: true });
     } catch (error) {
-      res.status(500).json({ error: "Error al eliminar producto" });
+      res.status(500).json({ error: "No se pudo eliminar el producto" });
     }
   });
 
