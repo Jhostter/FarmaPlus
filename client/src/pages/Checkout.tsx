@@ -86,12 +86,12 @@ export default function Checkout() {
     },
   });
 
-  const onSubmit = (data: CheckoutFormData) => {
+  const onSubmit = async (data: CheckoutFormData) => {
     if (cart.length === 0) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "El carrito está vacío. Por favor agrega productos antes de realizar el pedido.",
+        description: "El carrito está vacío.",
       });
       return;
     }
@@ -102,7 +102,12 @@ export default function Checkout() {
     );
 
     const orderData = {
-      ...data,
+      customerName: data.customerName,
+      customerEmail: data.customerEmail,
+      customerPhone: data.customerPhone,
+      deliveryAddress: data.deliveryAddress,
+      deliveryCity: data.deliveryCity,
+      deliveryPostalCode: data.deliveryPostalCode,
       total: currentTotal.toFixed(2),
       items: cart.map(item => ({
         productId: item.product.id,
@@ -111,7 +116,19 @@ export default function Checkout() {
         price: item.product.price,
       })),
     };
-    createOrderMutation.mutate(orderData);
+    
+    try {
+      const res = await apiRequest("POST", "/api/orders", orderData);
+      const order = await res.json();
+      clearCart();
+      navigate(`/confirmacion/${order.id}`);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo procesar el pedido.",
+      });
+    }
   };
 
   if (cart.length === 0) {
