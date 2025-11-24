@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle2, Package, Clock } from "lucide-react";
+import { CheckCircle2, Package, Clock, Download, FileText } from "lucide-react";
 import type { Order, OrderItem } from "@shared/schema";
 
 export default function OrderConfirmation() {
   const [, params] = useRoute("/confirmacion/:id");
   const orderId = params?.id;
+  const [paymentStatus, setPaymentStatus] = useState<"processing" | "success">("processing");
 
   const { data: order, isLoading } = useQuery<Order>({
     queryKey: ["/api/orders", orderId],
@@ -21,6 +23,59 @@ export default function OrderConfirmation() {
     queryKey: ["/api/orders", orderId, "items"],
     enabled: !!orderId,
   });
+
+  // Simular procesamiento de pago
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPaymentStatus("success");
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Generar factura digital en PDF
+  const generateInvoicePDF = () => {
+    if (!order || !orderItems) return;
+
+    const invoiceContent = `
+FARMAPLUS - FACTURA DIGITAL
+========================================
+Fecha: ${new Date(order.createdAt).toLocaleDateString('es-ES')}
+Número de Factura: ${order.id.slice(0, 8).toUpperCase()}
+
+DATOS DEL CLIENTE
+========================================
+Nombre: ${order.customerName}
+Email: ${order.customerEmail}
+Teléfono: ${order.customerPhone}
+Dirección: ${order.deliveryAddress}
+Ciudad: ${order.deliveryCity}
+Código Postal: ${order.deliveryPostalCode}
+
+DETALLES DEL PEDIDO
+========================================
+${orderItems.map(item => 
+  `${item.productName} x ${item.quantity} ............................ $${(parseFloat(item.price) * item.quantity).toFixed(2)}`
+).join('\n')}
+
+SUBTOTAL: $${(parseFloat(order.total) * 0.9).toFixed(2)}
+ENVÍO: Incluido
+TOTAL: $${parseFloat(order.total).toFixed(2)}
+
+========================================
+Estado: ${order.status === 'pending' ? 'Pendiente' : order.status}
+Entrega estimada: 24-48 horas hábiles
+
+¡Gracias por tu compra en FarmaPlus!
+    `;
+
+    const element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(invoiceContent));
+    element.setAttribute('download', `factura-${order.id.slice(0, 8).toUpperCase()}.txt`);
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
 
   if (isLoading) {
     return (
@@ -56,17 +111,19 @@ export default function OrderConfirmation() {
   return (
     <div className="min-h-screen bg-muted/30 py-12">
       <div className="max-w-2xl mx-auto px-4">
-        {/* Success Message */}
+        {/* Payment Processing / Success Message */}
         <Card className="mb-8">
           <CardContent className="pt-12 pb-12 text-center">
-            <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="h-10 w-10 text-green-600 dark:text-green-500" data-testid="icon-success" />
+            <div className={`h-16 w-16 rounded-full ${paymentStatus === "processing" ? "bg-blue-100 dark:bg-blue-900/20 animate-pulse" : "bg-green-100 dark:bg-green-900/20"} flex items-center justify-center mx-auto mb-6`}>
+              <CheckCircle2 className={`h-10 w-10 ${paymentStatus === "processing" ? "text-blue-600 dark:text-blue-500" : "text-green-600 dark:text-green-500"}`} data-testid="icon-success" />
             </div>
             <h1 className="text-3xl font-semibold mb-2" data-testid="text-confirmation-title">
-              ¡Pedido Confirmado!
+              {paymentStatus === "processing" ? "Procesando Pago..." : "¡Pago Confirmado!"}
             </h1>
             <p className="text-muted-foreground mb-6">
-              Hemos recibido tu pedido y lo procesaremos pronto
+              {paymentStatus === "processing" 
+                ? "Estamos procesando tu pago de forma segura..." 
+                : "Tu pago fue procesado exitosamente. Hemos recibido tu pedido y lo procesaremos pronto."}
             </p>
             <div className="inline-flex items-center gap-2 bg-muted px-4 py-2 rounded-md">
               <span className="text-sm text-muted-foreground">Número de pedido:</span>
@@ -178,6 +235,53 @@ export default function OrderConfirmation() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Invoice */}
+        {paymentStatus === "success" && (
+          <Card className="mb-8 border-2 border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Factura Digital
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-muted/50 p-4 rounded-md space-y-3 font-mono text-sm">
+                <div className="text-center font-bold mb-4">FARMAPLUS</div>
+                <div>Fecha: {new Date(order.createdAt).toLocaleDateString('es-ES')}</div>
+                <div>Factura: {order.id.slice(0, 8).toUpperCase()}</div>
+                <Separator />
+                <div className="space-y-1">
+                  <div><span className="font-semibold">Cliente:</span> {order.customerName}</div>
+                  <div><span className="font-semibold">Email:</span> {order.customerEmail}</div>
+                  <div><span className="font-semibold">Entrega:</span> {order.deliveryAddress}, {order.deliveryCity}</div>
+                </div>
+                <Separator />
+                <div className="space-y-2">
+                  {orderItems?.map((item, idx) => (
+                    <div key={idx} className="flex justify-between">
+                      <span>{item.productName} x{item.quantity}</span>
+                      <span>${(parseFloat(item.price) * item.quantity).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+                <Separator />
+                <div className="flex justify-between font-bold text-base">
+                  <span>TOTAL:</span>
+                  <span>${parseFloat(order.total).toFixed(2)}</span>
+                </div>
+              </div>
+              <Button 
+                onClick={generateInvoicePDF}
+                className="w-full"
+                data-testid="button-download-invoice"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Descargar Factura
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-4">
