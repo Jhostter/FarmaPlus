@@ -62,43 +62,35 @@ export default function Checkout() {
     setIsSubmitting(true);
 
     try {
-      const payload = {
-        customerName: formData.customerName,
-        customerEmail: formData.customerEmail,
-        customerPhone: formData.customerPhone,
-        deliveryAddress: formData.deliveryAddress,
-        deliveryCity: formData.deliveryCity,
-        deliveryPostalCode: formData.deliveryPostalCode,
-        total: total.toFixed(2),
-        items: cart.map(item => ({
-          productId: item.product.id,
-          productName: item.product.name,
-          quantity: Number(item.quantity),
-          price: String(item.product.price),
-        })),
-      };
-
-      console.log("Enviando payload:", payload);
-
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          customerName: formData.customerName,
+          customerEmail: formData.customerEmail,
+          customerPhone: formData.customerPhone,
+          deliveryAddress: formData.deliveryAddress,
+          deliveryCity: formData.deliveryCity,
+          deliveryPostalCode: formData.deliveryPostalCode,
+          total: total.toFixed(2),
+          items: cart.map(item => ({
+            productId: item.product.id,
+            productName: item.product.name,
+            quantity: Number(item.quantity),
+            price: String(item.product.price),
+          })),
+        }),
       });
 
-      console.log("Response status:", response.status);
-      const responseData = await response.json();
-      console.log("Response data:", responseData);
-
       if (!response.ok) {
-        throw new Error(responseData.error || "Error creating order");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Error creating order");
       }
 
-      const order = responseData;
+      const order = await response.json();
       clearCart();
       navigate(`/confirmacion/${order.id}`);
     } catch (error) {
-      console.error("Error al procesar pedido:", error);
       toast({
         variant: "destructive",
         title: "Error",

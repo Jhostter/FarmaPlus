@@ -230,7 +230,6 @@ export class SupabaseStorage implements IStorage {
       .select()
       .single();
     if (error) {
-      console.error("Error creating order in DB:", error);
       throw new Error(`Failed to create order: ${error.message}`);
     }
 
@@ -316,7 +315,6 @@ export class SupabaseStorage implements IStorage {
       .select()
       .single();
     if (error) {
-      console.error("Error creating order item in DB:", error);
       throw new Error(`Failed to create order item: ${error.message}`);
     }
     return this.mapOrderItem(data);
