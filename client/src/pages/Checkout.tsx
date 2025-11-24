@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import { insertOrderSchema } from "@shared/schema";
 import { useCart } from "@/contexts/CartContext";
 import { ArrowLeft } from "lucide-react";
@@ -68,7 +67,7 @@ export default function Checkout() {
     0
   );
 
-  const onSubmit = async (data: CheckoutFormData) => {
+  const handleSubmit = async (data: CheckoutFormData) => {
     if (cart.length === 0) {
       toast({
         variant: "destructive",
@@ -86,7 +85,7 @@ export default function Checkout() {
         0
       );
 
-      const res = await fetch("/api/orders", {
+      const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -106,9 +105,11 @@ export default function Checkout() {
         }),
       });
 
-      if (!res.ok) throw new Error("Error creating order");
-      
-      const order = await res.json();
+      if (!response.ok) {
+        throw new Error("Error creating order");
+      }
+
+      const order = await response.json();
       clearCart();
       navigate(`/confirmacion/${order.id}`);
     } catch (error) {
@@ -159,7 +160,7 @@ export default function Checkout() {
               </CardHeader>
               <CardContent>
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
                     <div className="space-y-4">
                       <FormField
                         control={form.control}
