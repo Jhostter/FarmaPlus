@@ -85,34 +85,44 @@ export default function Checkout() {
         0
       );
 
+      const orderPayload = {
+        customerName: data.customerName,
+        customerEmail: data.customerEmail,
+        customerPhone: data.customerPhone,
+        deliveryAddress: data.deliveryAddress,
+        deliveryCity: data.deliveryCity,
+        deliveryPostalCode: data.deliveryPostalCode,
+        total: currentTotal.toFixed(2),
+        items: cart.map(item => ({
+          productId: item.product.id,
+          productName: item.product.name,
+          quantity: item.quantity,
+          price: item.product.price,
+        })),
+      };
+
+      console.log("Enviando pedido:", orderPayload);
+
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerName: data.customerName,
-          customerEmail: data.customerEmail,
-          customerPhone: data.customerPhone,
-          deliveryAddress: data.deliveryAddress,
-          deliveryCity: data.deliveryCity,
-          deliveryPostalCode: data.deliveryPostalCode,
-          total: currentTotal.toFixed(2),
-          items: cart.map(item => ({
-            productId: item.product.id,
-            productName: item.product.name,
-            quantity: item.quantity,
-            price: item.product.price,
-          })),
-        }),
+        body: JSON.stringify(orderPayload),
       });
 
+      console.log("Respuesta del servidor:", response.status, response.statusText);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error del servidor:", errorText);
         throw new Error("Error creating order");
       }
 
       const order = await response.json();
+      console.log("Pedido creado:", order);
       clearCart();
       navigate(`/confirmacion/${order.id}`);
     } catch (error) {
+      console.error("Error al procesar pedido:", error);
       toast({
         variant: "destructive",
         title: "Error",

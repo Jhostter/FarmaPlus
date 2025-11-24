@@ -48,12 +48,13 @@ export const insertOrderSchema = createInsertSchema(orders).omit({
   createdAt: true,
   status: true,
 }).extend({
+  total: z.string().refine(val => /^\d+(\.\d{1,2})?$/.test(val), "El total debe ser un número válido"),
   items: z.array(z.object({
     productId: z.string(),
     productName: z.string(),
     quantity: z.number().min(1),
     price: z.string(),
-  })),
+  })).min(1, "Debe agregar al menos un producto"),
 });
 
 export const insertOrderItemSchema = createInsertSchema(orderItems).omit({
