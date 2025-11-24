@@ -39,6 +39,8 @@ export const orderItems = pgTable("order_items", {
 
 export const insertProductSchema = createInsertSchema(products).omit({
   id: true,
+}).extend({
+  price: z.coerce.string().refine(val => /^\d+(\.\d{1,2})?$/.test(val), "El precio debe ser un número válido (ej: 24.99)"),
 });
 
 export const insertOrderSchema = createInsertSchema(orders).omit({
