@@ -136,20 +136,20 @@ export default function Home() {
         </section>
 
         {/* Categories Section */}
-        <section className="py-8 sm:py-12 bg-muted/30">
-          <div className="max-w-6xl mx-auto px-4">
-            <h3 className="text-2xl sm:text-3xl font-semibold text-center mb-6 sm:mb-8" data-testid="text-categories-title">
+        <section className="py-8 sm:py-12 bg-muted/30 w-full overflow-x-hidden">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 w-full">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-center mb-6 sm:mb-8" data-testid="text-categories-title">
               Nuestras Categorías
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6 w-full">
               {categories.map((category) => (
                 <Link key={category.name} href="/productos">
                   <Card className="hover-elevate active-elevate-2 cursor-pointer h-full" data-testid={`card-category-${category.name}`}>
-                    <CardContent className="flex flex-col items-center justify-center p-8 text-center">
-                      <div className={`${category.color} mb-4`}>
-                        <category.icon className="h-12 w-12" />
+                    <CardContent className="flex flex-col items-center justify-center p-6 sm:p-8 text-center">
+                      <div className={`${category.color} mb-3 sm:mb-4`}>
+                        <category.icon className="h-8 sm:h-12 w-8 sm:w-12" />
                       </div>
-                      <h4 className="text-xl font-medium">{category.name}</h4>
+                      <h4 className="text-base sm:text-lg md:text-xl font-medium">{category.name}</h4>
                     </CardContent>
                   </Card>
                 </Link>
@@ -159,35 +159,35 @@ export default function Home() {
         </section>
 
         {/* Featured Products */}
-        <section className="py-8 sm:py-12">
-          <div className="max-w-6xl mx-auto px-4">
+        <section className="py-8 sm:py-12 w-full overflow-x-hidden">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 w-full">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
-              <h3 className="text-2xl sm:text-3xl font-semibold" data-testid="text-featured-title">
+              <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold" data-testid="text-featured-title">
                 Productos Destacados
               </h3>
               <Link href="/productos">
-                <Button variant="outline" data-testid="button-view-all">
+                <Button variant="outline" data-testid="button-view-all" className="flex-shrink-0">
                   Ver Todos
                 </Button>
               </Link>
             </div>
 
             {isLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6 w-full">
                 {[...Array(8)].map((_, i) => (
-                  <Card key={i}>
+                  <Card key={i} className="flex flex-col h-full">
                     <Skeleton className="aspect-square rounded-t-md" />
-                    <div className="p-4 space-y-2">
+                    <div className="p-3 sm:p-4 space-y-2 flex-1">
                       <Skeleton className="h-4 w-3/4" />
                       <Skeleton className="h-3 w-1/2" />
                       <Skeleton className="h-3 w-full" />
-                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-full mt-auto" />
                     </div>
                   </Card>
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6 w-full">
                 {featuredProducts.map((product) => (
                   <ProductCard
                     key={product.id}
