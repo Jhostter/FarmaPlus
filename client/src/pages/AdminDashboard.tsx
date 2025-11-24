@@ -162,7 +162,7 @@ export default function AdminDashboard() {
                       <FormItem>
                         <FormLabel>Nombre</FormLabel>
                         <FormControl>
-                          <Input data-testid="input-product-name" {...field} />
+                          <Input className="border" data-testid="input-product-name" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -176,7 +176,7 @@ export default function AdminDashboard() {
                       <FormItem>
                         <FormLabel>Descripción</FormLabel>
                         <FormControl>
-                          <Input data-testid="input-product-description" {...field} />
+                          <Input className="border" data-testid="input-product-description" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -190,7 +190,7 @@ export default function AdminDashboard() {
                       <FormItem>
                         <FormLabel>Precio</FormLabel>
                         <FormControl>
-                          <Input type="text" placeholder="0.00" data-testid="input-product-price" {...field} />
+                          <Input className="border" type="text" placeholder="0.00" data-testid="input-product-price" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -227,6 +227,7 @@ export default function AdminDashboard() {
                         <FormLabel>URL de Imagen Principal</FormLabel>
                         <FormControl>
                           <Input
+                            className="border"
                             type="text"
                             placeholder="https://ejemplo.com/imagen.jpg"
                             data-testid="input-product-imageUrl"
@@ -249,6 +250,7 @@ export default function AdminDashboard() {
                           <div className="space-y-2">
                             <div className="flex gap-2">
                               <Input
+                                className="border"
                                 type="text"
                                 placeholder="https://ejemplo.com/imagen2.jpg"
                                 value={newUrl}
@@ -304,7 +306,7 @@ export default function AdminDashboard() {
                       <FormItem>
                         <FormLabel>Stock</FormLabel>
                         <FormControl>
-                          <Input type="number" data-testid="input-product-stock" {...field} />
+                          <Input className="border" type="number" data-testid="input-product-stock" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
