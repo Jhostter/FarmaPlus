@@ -43,18 +43,20 @@ export const insertProductSchema = createInsertSchema(products).omit({
   price: z.coerce.string().refine(val => /^\d+(\.\d{1,2})?$/.test(val), "El precio debe ser un número válido (ej: 24.99)"),
 });
 
-export const insertOrderSchema = createInsertSchema(orders).omit({
-  id: true,
-  createdAt: true,
-  status: true,
-}).extend({
-  total: z.string().refine(val => /^\d+(\.\d{1,2})?$/.test(val), "El total debe ser un número válido"),
+export const insertOrderSchema = z.object({
+  customerName: z.string().min(1, "El nombre es requerido"),
+  customerEmail: z.string().email("Email inválido"),
+  customerPhone: z.string().min(1, "El teléfono es requerido"),
+  deliveryAddress: z.string().min(1, "La dirección es requerida"),
+  deliveryCity: z.string().min(1, "La ciudad es requerida"),
+  deliveryPostalCode: z.string().min(1, "El código postal es requerido"),
+  total: z.string(),
   items: z.array(z.object({
     productId: z.string(),
     productName: z.string(),
     quantity: z.number().min(1),
     price: z.string(),
-  })).min(1, "Debe agregar al menos un producto"),
+  })).min(1),
 });
 
 export const insertOrderItemSchema = createInsertSchema(orderItems).omit({

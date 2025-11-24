@@ -1,36 +1,13 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { insertOrderSchema } from "@shared/schema";
 import { useCart } from "@/contexts/CartContext";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
-
-const checkoutFormSchema = insertOrderSchema.omit({ items: true }).extend({
-  items: z.array(z.object({
-    productId: z.string(),
-    productName: z.string(),
-    quantity: z.number().min(1),
-    price: z.string(),
-  })).min(1, "El carrito no puede estar vacío"),
-});
-
-type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
 
 export default function Checkout() {
   const [, navigate] = useLocation();
@@ -38,36 +15,31 @@ export default function Checkout() {
   const { cart, clearCart } = useCart();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<CheckoutFormData>({
-    resolver: zodResolver(checkoutFormSchema),
-    defaultValues: {
-      customerName: "",
-      customerEmail: "",
-      customerPhone: "",
-      deliveryAddress: "",
-      deliveryCity: "",
-      deliveryPostalCode: "",
-      total: "0",
-      items: [],
-    },
+  const [formData, setFormData] = useState({
+    customerName: "",
+    customerEmail: "",
+    customerPhone: "",
+    deliveryAddress: "",
+    deliveryCity: "",
+    deliveryPostalCode: "",
   });
-
-  useEffect(() => {
-    const items = cart.map(item => ({
-      productId: item.product.id,
-      productName: item.product.name,
-      quantity: item.quantity,
-      price: item.product.price,
-    }));
-    form.setValue("items", items);
-  }, [cart, form]);
 
   const total = cart.reduce(
     (sum, item) => sum + parseFloat(item.product.price) * item.quantity,
     0
   );
 
-  const handleSubmit = async (data: CheckoutFormData) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
     if (cart.length === 0) {
       toast({
         variant: "destructive",
@@ -77,48 +49,45 @@ export default function Checkout() {
       return;
     }
 
+    if (!formData.customerName || !formData.customerEmail || !formData.customerPhone || 
+        !formData.deliveryAddress || !formData.deliveryCity || !formData.deliveryPostalCode) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Por favor completa todos los campos.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const currentTotal = cart.reduce(
-        (sum, item) => sum + parseFloat(item.product.price) * item.quantity,
-        0
-      );
-
-      const orderPayload = {
-        customerName: data.customerName,
-        customerEmail: data.customerEmail,
-        customerPhone: data.customerPhone,
-        deliveryAddress: data.deliveryAddress,
-        deliveryCity: data.deliveryCity,
-        deliveryPostalCode: data.deliveryPostalCode,
-        total: currentTotal.toFixed(2),
-        items: cart.map(item => ({
-          productId: item.product.id,
-          productName: item.product.name,
-          quantity: item.quantity,
-          price: item.product.price,
-        })),
-      };
-
-      console.log("Enviando pedido:", orderPayload);
-
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderPayload),
+        body: JSON.stringify({
+          customerName: formData.customerName,
+          customerEmail: formData.customerEmail,
+          customerPhone: formData.customerPhone,
+          deliveryAddress: formData.deliveryAddress,
+          deliveryCity: formData.deliveryCity,
+          deliveryPostalCode: formData.deliveryPostalCode,
+          total: total.toFixed(2),
+          items: cart.map(item => ({
+            productId: item.product.id,
+            productName: item.product.name,
+            quantity: item.quantity,
+            price: item.product.price,
+          })),
+        }),
       });
 
-      console.log("Respuesta del servidor:", response.status, response.statusText);
-
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error del servidor:", errorText);
-        throw new Error("Error creating order");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Error creating order");
       }
 
       const order = await response.json();
-      console.log("Pedido creado:", order);
       clearCart();
       navigate(`/confirmacion/${order.id}`);
     } catch (error) {
@@ -169,135 +138,91 @@ export default function Checkout() {
                 <CardTitle>Información de Entrega</CardTitle>
               </CardHeader>
               <CardContent>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-                    <div className="space-y-4">
-                      <FormField
-                        control={form.control}
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Nombre Completo *</label>
+                      <Input
                         name="customerName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nombre Completo *</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Juan Pérez"
-                                {...field}
-                                data-testid="input-name"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        placeholder="Juan Pérez"
+                        value={formData.customerName}
+                        onChange={handleInputChange}
+                        data-testid="input-name"
                       />
+                    </div>
 
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium">Email *</label>
+                        <Input
                           name="customerEmail"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email *</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="email"
-                                  placeholder="juan@example.com"
-                                  {...field}
-                                  data-testid="input-email"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="customerPhone"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Teléfono *</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="tel"
-                                  placeholder="+34 600 123 456"
-                                  {...field}
-                                  data-testid="input-phone"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                          type="email"
+                          placeholder="juan@example.com"
+                          value={formData.customerEmail}
+                          onChange={handleInputChange}
+                          data-testid="input-email"
                         />
                       </div>
 
-                      <FormField
-                        control={form.control}
-                        name="deliveryAddress"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Dirección de Entrega *</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Calle Principal 123, Piso 2"
-                                {...field}
-                                data-testid="input-address"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="deliveryCity"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Ciudad *</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Madrid"
-                                  {...field}
-                                  data-testid="input-city"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="deliveryPostalCode"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Código Postal *</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="28001"
-                                  {...field}
-                                  data-testid="input-postal-code"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                      <div>
+                        <label className="text-sm font-medium">Teléfono *</label>
+                        <Input
+                          name="customerPhone"
+                          type="tel"
+                          placeholder="+34 600 123 456"
+                          value={formData.customerPhone}
+                          onChange={handleInputChange}
+                          data-testid="input-phone"
                         />
                       </div>
                     </div>
 
-                    <Button
-                      type="submit"
-                      size="lg"
-                      className="w-full"
-                      disabled={isSubmitting}
-                      data-testid="button-submit-order"
-                    >
-                      {isSubmitting ? "Procesando..." : "Confirmar Pedido"}
-                    </Button>
-                  </form>
-                </Form>
+                    <div>
+                      <label className="text-sm font-medium">Dirección de Entrega *</label>
+                      <Input
+                        name="deliveryAddress"
+                        placeholder="Calle Principal 123, Piso 2"
+                        value={formData.deliveryAddress}
+                        onChange={handleInputChange}
+                        data-testid="input-address"
+                      />
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium">Ciudad *</label>
+                        <Input
+                          name="deliveryCity"
+                          placeholder="Madrid"
+                          value={formData.deliveryCity}
+                          onChange={handleInputChange}
+                          data-testid="input-city"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium">Código Postal *</label>
+                        <Input
+                          name="deliveryPostalCode"
+                          placeholder="28001"
+                          value={formData.deliveryPostalCode}
+                          onChange={handleInputChange}
+                          data-testid="input-postal-code"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="w-full"
+                    disabled={isSubmitting}
+                    data-testid="button-submit-order"
+                  >
+                    {isSubmitting ? "Procesando..." : "Confirmar Pedido"}
+                  </Button>
+                </form>
               </CardContent>
             </Card>
           </div>
