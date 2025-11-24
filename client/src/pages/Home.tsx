@@ -7,15 +7,28 @@ import { Header } from "@/components/Header";
 import { CartSheet } from "@/components/CartSheet";
 import { ProductCard } from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Pill, Heart, ShieldCheck, Truck, PhoneCall } from "lucide-react";
+import { Pill, Heart, ShieldCheck, Truck, PhoneCall, X } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { useToast } from "@/hooks/use-toast";
 import type { Product } from "@shared/schema";
 import heroImage from "@assets/generated_images/professional_pharmacy_hero_image.png";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function Home() {
   const [cartOpen, setCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contactData, setContactData] = useState({ name: "", email: "", message: "" });
+  const [isSendingContact, setIsSendingContact] = useState(false);
   const { cart, cartItemCount, addToCart, updateQuantity, removeItem } = useCart();
+  const { toast } = useToast();
 
   const { data: products, isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
@@ -26,6 +39,40 @@ export default function Home() {
   const handleAddToCart = (product: Product) => {
     addToCart(product);
     setCartOpen(true);
+  };
+
+  const handleSendContact = async () => {
+    if (!contactData.name || !contactData.email || !contactData.message) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Por favor completa todos los campos.",
+      });
+      return;
+    }
+
+    setIsSendingContact(true);
+    
+    try {
+      // Simular envío de email - en producción aquí iría a un endpoint real
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      toast({
+        title: "Mensaje Enviado",
+        description: "Nos pondremos en contacto pronto. ¡Gracias!",
+      });
+      
+      setContactData({ name: "", email: "", message: "" });
+      setContactOpen(false);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo enviar el mensaje.",
+      });
+    } finally {
+      setIsSendingContact(false);
+    }
   };
 
   const categories = [
@@ -79,6 +126,7 @@ export default function Home() {
                   variant="outline"
                   className="w-full sm:w-auto bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
                   data-testid="button-hero-contact"
+                  onClick={() => setContactOpen(true)}
                 >
                   Contactar
                 </Button>
@@ -232,6 +280,58 @@ export default function Home() {
         onUpdateQuantity={updateQuantity}
         onRemoveItem={removeItem}
       />
+
+      {/* Contact Modal */}
+      <Dialog open={contactOpen} onOpenChange={setContactOpen}>
+        <DialogContent className="w-full max-w-md mx-4">
+          <DialogHeader>
+            <DialogTitle>Contáctanos</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Nombre *</label>
+              <Input
+                placeholder="Tu nombre"
+                value={contactData.name}
+                onChange={(e) => setContactData({ ...contactData, name: e.target.value })}
+                data-testid="input-contact-name"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Email *</label>
+              <Input
+                type="email"
+                placeholder="tu@email.com"
+                value={contactData.email}
+                onChange={(e) => setContactData({ ...contactData, email: e.target.value })}
+                data-testid="input-contact-email"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Mensaje *</label>
+              <Textarea
+                placeholder="Cuéntanos cómo podemos ayudarte..."
+                value={contactData.message}
+                onChange={(e) => setContactData({ ...contactData, message: e.target.value })}
+                className="min-h-[120px] resize-none"
+                data-testid="input-contact-message"
+              />
+            </div>
+
+            <Button
+              onClick={handleSendContact}
+              disabled={isSendingContact}
+              className="w-full"
+              data-testid="button-send-contact"
+            >
+              {isSendingContact ? "Enviando..." : "Enviar Mensaje"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
